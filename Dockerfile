@@ -1,4 +1,4 @@
-FROM golang:1.21.2 AS suppress
+FROM golang:1.21.3 AS suppress
 
 LABEL maintainer="Konstantinos Chatsatourian <kchatsatourian@gmail.com>"
 
