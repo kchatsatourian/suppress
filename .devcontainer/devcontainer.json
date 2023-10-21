@@ -1,5 +1,4 @@
 {
-    "name": "Suppress",
     "build": {
         "dockerfile": "Dockerfile"
     },
@@ -12,5 +11,6 @@
                 "editor.formatOnSave": true
             }
         }
-    }
+    },
+    "name": "Suppress"
 }
