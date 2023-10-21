@@ -1,17 +1,16 @@
 {
-    "name": "Suppress",
     "build": {
         "dockerfile": "Dockerfile"
     },
     "customizations": {
         "vscode": {
             "extensions": [
-                "golang.go",
-                "ms-azuretools.vscode-docker"
+                "golang.go"
             ],
             "settings": {
                 "editor.formatOnSave": true
             }
         }
-    }
+    },
+    "name": "Suppress"
 }
