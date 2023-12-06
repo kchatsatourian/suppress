@@ -1,4 +1,4 @@
-FROM golang:1.21.4 AS suppress
+FROM golang:1.21.5 AS suppress
 
 COPY go.mod /suppress/
 COPY go.sum /suppress/
