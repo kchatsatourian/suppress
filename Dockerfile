@@ -1,11 +1,9 @@
 FROM golang:1.21.4 AS suppress
 
-LABEL maintainer="Konstantinos Chatsatourian <kchatsatourian@gmail.com>"
-
-WORKDIR /suppress/
-
 COPY go.mod /suppress/
 COPY go.sum /suppress/
+
+WORKDIR /suppress/
 
 RUN set -o xtrace && \
     go mod download
@@ -17,7 +15,9 @@ RUN set -o xtrace && \
 
 FROM scratch
 
+LABEL maintainer="Konstantinos Chatsatourian <kchatsatourian@gmail.com>"
+
 COPY --from=suppress /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=suppress /suppress/ /suppress/
 
-CMD [ "/suppress/suppress" ]
+ENTRYPOINT [ "/suppress/suppress" ]
