@@ -1,4 +1,13 @@
-FROM golang:1.21.5 AS suppress
+FROM golang:1.23.3-alpine AS certificates
+
+RUN --mount=type=cache,target=/var/cache/apk/ \
+      apk update && \
+      apk add ca-certificates
+
+RUN --mount=type=cache,target=/etc/ssl/certs/ \
+    update-ca-certificates
+
+FROM golang:1.23.3-alpine AS suppress
 
 WORKDIR /application/
 
@@ -15,7 +24,7 @@ FROM scratch
 
 LABEL maintainer="Konstantinos Chatsatourian <kchatsatourian@gmail.com>"
 
-COPY --from=suppress /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
-COPY --from=suppress /suppress/ /suppress/
+COPY --from=certificates --link /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=suppress --link /suppress/suppress /suppress/
 
 ENTRYPOINT [ "/suppress/suppress" ]
