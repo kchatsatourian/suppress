@@ -14,35 +14,10 @@ import (
 var (
 	bot       *TelegramBot.BotAPI
 	err       error
+	now       = time.Now()
 	parser    = Feed.NewParser()
-	updatedAt = time.Now()
+	updatedAt time.Time
 )
-
-func main() {
-	token, exists := os.LookupEnv("TELEGRAM_BOT_TOKEN")
-	if !exists {
-		log.Fatal("TELEGRAM_BOT_TOKEN not set.")
-	}
-
-	// 1. Get the chat ID: `https://api.telegram.org/bot${token}/getUpdates`
-	// 2. Send a message: `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat}&text=Hi!`
-
-	bot, err = TelegramBot.NewBotAPI(token)
-	if err != nil {
-		log.Panic("Could not create Telegram bot: ", err)
-	}
-
-	subscriptions := subscriptions()
-
-	var group sync.WaitGroup
-	group.Add(len(subscriptions))
-
-	for subscription, chats := range subscriptions {
-		go fetch(&group, subscription, chats)
-	}
-
-	group.Wait()
-}
 
 func fetch(group *sync.WaitGroup, subscription string, chats []int64) {
 	defer group.Done()
@@ -72,6 +47,48 @@ func fetch(group *sync.WaitGroup, subscription string, chats []int64) {
 	}
 }
 
+func getUpdatedAt() {
+	bytes, err := os.ReadFile("/suppress/state/updatedAt")
+	if err != nil {
+		updatedAt = now
+		return
+	}
+	err = json.Unmarshal(bytes, &updatedAt)
+	if err != nil {
+		return
+	}
+}
+
+func main() {
+	token, exists := os.LookupEnv("TELEGRAM_BOT_TOKEN")
+	if !exists {
+		log.Fatal("TELEGRAM_BOT_TOKEN not set.")
+	}
+
+	// 1. Get the chat ID: `https://api.telegram.org/bot${token}/getUpdates`
+	// 2. Send a message: `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat}&text=Hi!`
+
+	bot, err = TelegramBot.NewBotAPI(token)
+	if err != nil {
+		log.Panic("Could not create Telegram bot: ", err)
+	}
+
+	getUpdatedAt()
+
+	subscriptions := subscriptions()
+
+	var group sync.WaitGroup
+	group.Add(len(subscriptions))
+
+	for subscription, chats := range subscriptions {
+		go fetch(&group, subscription, chats)
+	}
+
+	group.Wait()
+
+	setUpdatedAt()
+}
+
 func send(group *sync.WaitGroup, bot *TelegramBot.BotAPI, chat int64, link string) {
 	defer group.Done()
 	message := TelegramBot.NewMessage(chat, link)
@@ -82,8 +99,16 @@ func send(group *sync.WaitGroup, bot *TelegramBot.BotAPI, chat int64, link strin
 	}
 }
 
+func setUpdatedAt() {
+	bytes, err := json.Marshal(now)
+	if err != nil {
+		return
+	}
+	err = os.WriteFile("/suppress/state/updatedAt", bytes, 0400)
+}
+
 func subscriptions() map[string][]int64 {
-	path := "/suppress/subscriptions.json"
+	path := "/suppress/configuration/subscriptions.json"
 	file, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatal("Could not read subscriptions: ", err)
