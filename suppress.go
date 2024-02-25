@@ -32,25 +32,16 @@ func main() {
 		log.Panic("Could not create Telegram bot: ", err)
 	}
 
-	go func() {
-		for {
-			subscriptions := subscriptions()
+	subscriptions := subscriptions()
 
-			var group sync.WaitGroup
-			group.Add(len(subscriptions))
+	var group sync.WaitGroup
+	group.Add(len(subscriptions))
 
-			for subscription, chats := range subscriptions {
-				go fetch(&group, subscription, chats)
-			}
+	for subscription, chats := range subscriptions {
+		go fetch(&group, subscription, chats)
+	}
 
-			group.Wait()
-			updatedAt = time.Now()
-
-			time.Sleep(30 * time.Minute)
-		}
-	}()
-
-	select {}
+	group.Wait()
 }
 
 func fetch(group *sync.WaitGroup, subscription string, chats []int64) {
