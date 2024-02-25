@@ -50,12 +50,13 @@ func fetch(group *sync.WaitGroup, subscription string, chats []int64) {
 func getUpdatedAt() {
 	bytes, err := os.ReadFile("/suppress/state/updatedAt")
 	if err != nil {
+		log.Println("Could not read time: ", err)
 		updatedAt = now
 		return
 	}
 	err = json.Unmarshal(bytes, &updatedAt)
 	if err != nil {
-		return
+		log.Println("Could not deserialize time: ", err)
 	}
 }
 
@@ -102,9 +103,13 @@ func send(group *sync.WaitGroup, bot *TelegramBot.BotAPI, chat int64, link strin
 func setUpdatedAt() {
 	bytes, err := json.Marshal(now)
 	if err != nil {
-		return
+		log.Fatal("Could not serialize time: ", err)
 	}
+
 	err = os.WriteFile("/suppress/state/updatedAt", bytes, 0400)
+	if err != nil {
+		log.Fatal("Could not write time: ", err)
+	}
 }
 
 func subscriptions() map[string][]int64 {
@@ -117,7 +122,7 @@ func subscriptions() map[string][]int64 {
 	var subscriptions map[string][]int64
 	err = json.Unmarshal(file, &subscriptions)
 	if err != nil {
-		log.Fatal("Could not parse subscriptions: ", err)
+		log.Fatal("Could not deserialize subscriptions: ", err)
 	}
 
 	return subscriptions
