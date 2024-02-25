@@ -11,47 +11,18 @@ import (
 	Feed "github.com/mmcdole/gofeed"
 )
 
+type Subscription struct {
+	Channels []int64 `json:"channels"`
+	Name     string  `json:"name"`
+}
+
 var (
 	bot       *TelegramBot.BotAPI
 	err       error
+	now       = time.Now()
 	parser    = Feed.NewParser()
-	updatedAt = time.Now()
+	updatedAt time.Time
 )
-
-func main() {
-	token, exists := os.LookupEnv("TELEGRAM_BOT_TOKEN")
-	if !exists {
-		log.Fatal("TELEGRAM_BOT_TOKEN not set.")
-	}
-
-	// 1. Get the chat ID: `https://api.telegram.org/bot${token}/getUpdates`
-	// 2. Send a message: `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat}&text=Hi!`
-
-	bot, err = TelegramBot.NewBotAPI(token)
-	if err != nil {
-		log.Panic("Could not create Telegram bot: ", err)
-	}
-
-	go func() {
-		for {
-			subscriptions := subscriptions()
-
-			var group sync.WaitGroup
-			group.Add(len(subscriptions))
-
-			for subscription, chats := range subscriptions {
-				go fetch(&group, subscription, chats)
-			}
-
-			group.Wait()
-			updatedAt = time.Now()
-
-			time.Sleep(30 * time.Minute)
-		}
-	}()
-
-	select {}
-}
 
 func fetch(group *sync.WaitGroup, subscription string, chats []int64) {
 	defer group.Done()
@@ -81,6 +52,49 @@ func fetch(group *sync.WaitGroup, subscription string, chats []int64) {
 	}
 }
 
+func getUpdatedAt() {
+	bytes, err := os.ReadFile("/suppress/state/updatedAt")
+	if err != nil {
+		log.Println("Could not read time: ", err)
+		updatedAt = now
+		return
+	}
+	err = json.Unmarshal(bytes, &updatedAt)
+	if err != nil {
+		log.Println("Could not deserialize time: ", err)
+	}
+}
+
+func main() {
+	token, exists := os.LookupEnv("TELEGRAM_BOT_TOKEN")
+	if !exists {
+		log.Fatal("TELEGRAM_BOT_TOKEN not set.")
+	}
+
+	// 1. Get the chat ID: `https://api.telegram.org/bot${token}/getUpdates`
+	// 2. Send a message: `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat}&text=Hi!`
+
+	bot, err = TelegramBot.NewBotAPI(token)
+	if err != nil {
+		log.Panic("Could not create Telegram bot: ", err)
+	}
+
+	getUpdatedAt()
+
+	subscriptions := subscriptions()
+
+	var group sync.WaitGroup
+	group.Add(len(subscriptions))
+
+	for endpoint, subscription := range subscriptions {
+		go fetch(&group, endpoint, subscription.Channels)
+	}
+
+	group.Wait()
+
+	setUpdatedAt()
+}
+
 func send(group *sync.WaitGroup, bot *TelegramBot.BotAPI, chat int64, link string) {
 	defer group.Done()
 	message := TelegramBot.NewMessage(chat, link)
@@ -91,17 +105,29 @@ func send(group *sync.WaitGroup, bot *TelegramBot.BotAPI, chat int64, link strin
 	}
 }
 
-func subscriptions() map[string][]int64 {
-	path := "/suppress/subscriptions.json"
+func setUpdatedAt() {
+	bytes, err := json.Marshal(now)
+	if err != nil {
+		log.Fatal("Could not serialize time: ", err)
+	}
+
+	err = os.WriteFile("/suppress/state/updatedAt", bytes, 0400)
+	if err != nil {
+		log.Fatal("Could not write time: ", err)
+	}
+}
+
+func subscriptions() map[string]Subscription {
+	path := "/suppress/configuration/subscriptions.json"
 	file, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatal("Could not read subscriptions: ", err)
 	}
 
-	var subscriptions map[string][]int64
+	var subscriptions map[string]Subscription
 	err = json.Unmarshal(file, &subscriptions)
 	if err != nil {
-		log.Fatal("Could not parse subscriptions: ", err)
+		log.Fatal("Could not deserialize subscriptions: ", err)
 	}
 
 	return subscriptions
