@@ -1,4 +1,4 @@
-FROM golang:1.22.0 AS suppress
+FROM golang:1.22.3 AS suppress
 
 WORKDIR /application/
 
