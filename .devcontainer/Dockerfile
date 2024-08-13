@@ -1,4 +1,4 @@
-FROM golang:1.22.5
+FROM golang:1.23.0
 
 LABEL maintainer="Konstantinos Chatsatourian <kchatsatourian@gmail.com>"
 
