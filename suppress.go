@@ -11,6 +11,11 @@ import (
 	Feed "github.com/mmcdole/gofeed"
 )
 
+type Subscription struct {
+	Channels []int64 `json:"channels"`
+	Name     string  `json:"name"`
+}
+
 var (
 	bot       *TelegramBot.BotAPI
 	err       error
@@ -81,8 +86,8 @@ func main() {
 	var group sync.WaitGroup
 	group.Add(len(subscriptions))
 
-	for subscription, chats := range subscriptions {
-		go fetch(&group, subscription, chats)
+	for endpoint, subscription := range subscriptions {
+		go fetch(&group, endpoint, subscription.Channels)
 	}
 
 	group.Wait()
@@ -112,14 +117,14 @@ func setUpdatedAt() {
 	}
 }
 
-func subscriptions() map[string][]int64 {
+func subscriptions() map[string]Subscription {
 	path := "/suppress/configuration/subscriptions.json"
 	file, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatal("Could not read subscriptions: ", err)
 	}
 
-	var subscriptions map[string][]int64
+	var subscriptions map[string]Subscription
 	err = json.Unmarshal(file, &subscriptions)
 	if err != nil {
 		log.Fatal("Could not deserialize subscriptions: ", err)
