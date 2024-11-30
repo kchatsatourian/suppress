@@ -22,7 +22,12 @@ RUN --mount=type=bind,target=. \
 
 FROM scratch
 
-LABEL maintainer="Konstantinos Chatsatourian <kchatsatourian@gmail.com>"
+LABEL \
+    org.opencontainers.image.description="Suppress is a simple RSS application for Telegram written in Go." \
+    org.opencontainers.image.licenses="MIT" \
+    org.opencontainers.image.source="https://github.com/kchatsatourian/suppress" \
+    org.opencontainers.image.title="suppress" \
+    org.opencontainers.image.vendor="Konstantinos Chatsatourian"
 
 COPY --from=certificates --link /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=suppress --link /suppress/suppress /suppress/
