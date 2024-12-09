@@ -5,6 +5,7 @@
     "customizations": {
         "vscode": {
             "extensions": [
+                "EditorConfig.EditorConfig",
                 "golang.go"
             ],
             "settings": {

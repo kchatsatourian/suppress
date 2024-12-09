@@ -1,6 +1,11 @@
 FROM golang:1.23.4
 
-LABEL maintainer="Konstantinos Chatsatourian <kchatsatourian@gmail.com>"
+LABEL \
+    org.opencontainers.image.description="Supress is a simple RSS bot for Telegram written in Go." \
+    org.opencontainers.image.licenses="MIT" \
+    org.opencontainers.image.source="https://github.com/kchatsatourian/suppress" \
+    org.opencontainers.image.title="suppress" \
+    org.opencontainers.image.vendor="Konstantinos Chatsatourian"
 
 RUN set -o xtrace && \
     apt-get update && \
