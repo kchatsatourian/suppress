@@ -1,6 +1,6 @@
 ## 💻 Suppress
 
-Suppress is a simple RSS bot for Telegram written in Go.
+Suppress is a simple RSS application for Telegram written in Go.
 
 ## 📄 License
 
