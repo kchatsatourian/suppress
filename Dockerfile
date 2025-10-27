@@ -1,4 +1,4 @@
-FROM golang:1.24.5-alpine AS certificates
+FROM golang:1.25.3-alpine AS certificates
 
 RUN --mount=type=cache,target=/var/cache/apk/ \
       apk update && \
@@ -7,7 +7,7 @@ RUN --mount=type=cache,target=/var/cache/apk/ \
 RUN --mount=type=cache,target=/etc/ssl/certs/ \
     update-ca-certificates
 
-FROM golang:1.24.5-alpine AS suppress
+FROM golang:1.25.3-alpine AS suppress
 
 WORKDIR /application/
 
