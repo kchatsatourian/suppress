@@ -1,4 +1,4 @@
-FROM golang:1.26.0
+FROM golang:1.26.1
 
 LABEL \
     org.opencontainers.image.description="Suppress is a simple RSS application for Telegram written in Go." \
