@@ -15,10 +15,11 @@ func Execute() {
 	state.ExecutedAt = time.Now()
 	state.Read()
 	subscriptions.Read()
+	var links sync.Map
 	var group sync.WaitGroup
 	group.Add(len(subscriptions.Subscriptions))
 	for endpoint, subscription := range subscriptions.Subscriptions {
-		go feeds.Fetch(&group, endpoint, subscription.Channels)
+		go feeds.Fetch(&group, endpoint, subscription.Channels, &links)
 	}
 	group.Wait()
 	state.Write()
