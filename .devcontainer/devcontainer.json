@@ -1,17 +1,18 @@
 {
-    "build": {
-        "dockerfile": "Dockerfile"
-    },
-    "customizations": {
-        "vscode": {
-            "extensions": [
-                "EditorConfig.EditorConfig",
-                "golang.go"
-            ],
-            "settings": {
-                "editor.formatOnSave": true
-            }
-        }
-    },
-    "name": "Suppress"
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Bowlerr.sqlite-intelliview-vscode",
+        "EditorConfig.EditorConfig",
+        "golang.go"
+      ],
+      "settings": {
+        "editor.formatOnSave": true
+      }
+    }
+  },
+  "name": "Suppress"
 }

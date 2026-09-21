@@ -1,26 +1,38 @@
 package tag
 
 import (
+	"database/sql"
 	"log/slog"
-	"os"
-)
 
-var (
-	path = "/suppress/configuration/tag"
+	"github.com/kchatsatourian/suppress/internal/state"
 )
 
 func Read() string {
-	bytes, err := os.ReadFile(path)
+	var value string
+
+	err := state.SQLite.QueryRow(
+		"SELECT value FROM state WHERE key = 'tag'",
+	).Scan(&value)
+
+	if err == sql.ErrNoRows {
+		return ""
+	}
+
 	if err != nil {
 		slog.Warn("Could not read tag.", "error", err)
 		return ""
 	}
-	return string(bytes)
+
+	return value
 }
 
 func Write(tag string) {
-	bytes := []byte(tag)
-	err := os.WriteFile(path, bytes, 0400)
+	_, err := state.SQLite.Exec(`
+		INSERT INTO state (key, value)
+		VALUES ('tag', ?)
+		ON CONFLICT(key) DO UPDATE SET value = excluded.value
+	`, tag)
+
 	if err != nil {
 		slog.Warn("Could not write tag.", "error", err)
 	}
