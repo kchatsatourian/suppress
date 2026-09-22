@@ -13,7 +13,7 @@ var (
 	parser = Feed.NewParser()
 )
 
-func Fetch(group *sync.WaitGroup, subscription string, chats []int64, links *sync.Map) {
+func Fetch(group *sync.WaitGroup, subscription string, chats []int64) {
 	defer group.Done()
 	feed, err := parser.ParseURL(subscription)
 	if err != nil {
@@ -26,8 +26,7 @@ func Fetch(group *sync.WaitGroup, subscription string, chats []int64, links *syn
 	}
 
 	for _, item := range feed.Items {
-		_, exists := links.LoadOrStore(item.Link, true)
-		if exists {
+		if !state.IsUnique(item.Link) {
 			continue
 		}
 

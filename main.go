@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	telegram.Initialize()
 	state.Initialize()
+	telegram.Initialize()
 	scheduler.Initialize()
 }

@@ -9,6 +9,8 @@ import (
 	_ "modernc.org/sqlite"
 )
 
+const expiration = 30 * 24 * time.Hour
+
 var (
 	ExecutedAt time.Time
 	path       = "/suppress/configuration/suppress.db"
@@ -32,10 +34,48 @@ func Initialize() {
 		)
 	`)
 
+	_, err = SQLite.Exec(`
+		CREATE TABLE IF NOT EXISTS deduplication (
+			link TEXT PRIMARY KEY,
+			expires_at INTEGER NOT NULL
+		);
+
+		CREATE INDEX IF NOT EXISTS index_deduplication_expires_at
+		ON deduplication (expires_at);
+	`)
+
+	_, err = SQLite.Exec(`
+		DELETE FROM deduplication
+		WHERE expires_at <= ?
+	`, time.Now().Unix())
+
 	if err != nil {
-		slog.Error("Could not initialize database.", "error", err)
+		slog.Error("Could not initialize deduplication.", "error", err)
 		os.Exit(1)
 	}
+}
+
+func IsUnique(link string) bool {
+	now := time.Now().Unix()
+
+	result, err := SQLite.Exec(`
+		INSERT INTO deduplication (link, expires_at)
+		VALUES (?, ?)
+		ON CONFLICT(link) DO NOTHING
+	`, link, now+int64(expiration.Seconds()))
+
+	if err != nil {
+		slog.Warn("Could not check deduplication.", "error", err)
+		return true
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		slog.Warn("Could not check deduplication result.", "error", err)
+		return true
+	}
+
+	return rows > 0
 }
 
 func Read() {
