@@ -1,13 +1,16 @@
 package main
 
 import (
-	"github.com/kchatsatourian/suppress/internal/scheduler"
-	"github.com/kchatsatourian/suppress/internal/state"
-	"github.com/kchatsatourian/suppress/internal/telegram"
+	"fmt"
+	"os"
+
+	"github.com/kchatsatourian/suppress/cmd"
 )
 
 func main() {
-	state.Initialize()
-	telegram.Initialize()
-	scheduler.Initialize()
+	err := cmd.RootCommand().Execute()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }
