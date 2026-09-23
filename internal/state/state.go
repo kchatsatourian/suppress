@@ -27,30 +27,18 @@ func Initialize() {
 		os.Exit(1)
 	}
 
-	_, err = SQLite.Exec(`
-		CREATE TABLE IF NOT EXISTS state (
-			key TEXT PRIMARY KEY,
-			value TEXT NOT NULL
-		)
-	`)
-
-	_, err = SQLite.Exec(`
-		CREATE TABLE IF NOT EXISTS deduplication (
-			link TEXT PRIMARY KEY,
-			expires_at INTEGER NOT NULL
-		);
-
-		CREATE INDEX IF NOT EXISTS index_deduplication_expires_at
-		ON deduplication (expires_at);
-	`)
+	_, err = SQLite.Exec(schema)
+	if err != nil {
+		slog.Error("Could not create schema.", "error", err)
+		os.Exit(1)
+	}
 
 	_, err = SQLite.Exec(`
 		DELETE FROM deduplication
 		WHERE expires_at <= ?
 	`, time.Now().Unix())
-
 	if err != nil {
-		slog.Error("Could not initialize deduplication.", "error", err)
+		slog.Error("Could not remove expired entries.", "error", err)
 		os.Exit(1)
 	}
 }
